@@ -15,7 +15,7 @@ ported to **AviumUI 16.2.2** (LineageOS 23.2 / Android 16).
 - **Launcher icon shape**: iOS-like rounded rectangle (`square`) by default, and also applied to the
   app drawer (upstream only applied custom shapes to themed/workspace icons).
 - **KernelSU + SUSFS built-in kernel** (separate repo): BakaSU/SukiSU + SUSFS 2.3.0.
-- **ReSukiSU manager** prebuilt (`prebuilts/ksu/ReSukiSU.apk`).
+- **BakaSU manager 35257** prebuilt (`prebuilts/ksu/BakaSU.apk`), matching the kernel driver version.
 - `tools/verify.sh`: unified PASS/WARN/FAIL verification script.
 
 ## Build
@@ -71,7 +71,7 @@ StrongBox (C-APDU / shared secret), KernelSU/SUSFS, thermal, USB. A manual check
 
 - `prebuilts/nxp/` contains **proprietary NXP/OnePlus binaries extracted from crDroid**.
   They are included here for reproducibility; redistribution may be subject to NXP/OnePlus terms.
-- `prebuilts/ksu/ReSukiSU.apk` is GPL-3.0 (KernelSU/ReSukiSU). Source: https://github.com/ReSukiSU/ReSukiSU
+- `prebuilts/ksu/BakaSU.apk` is GPL-3.0 (BakaSU / KernelSU). Source: https://github.com/Baka-SU/BakaSU
 - Device tree: Apache-2.0 (LineageOS style).
 
 ## Credits
@@ -80,5 +80,5 @@ StrongBox (C-APDU / shared secret), KernelSU/SUSFS, thermal, USB. A manual check
 - crDroid (StrongBox KeyMint3 prebuilts)
 - OnePlusOSS (SM8845 kernel source)
 - cctv18 (6.12 OPlus kernel build script)
-- ReSukiSU / BakaSU / SukiSU / KernelSU
+- BakaSU / ReSukiSU / SukiSU / KernelSU
 - OnePlus-SM8850-Development (device tree / prebuilt kernel base)

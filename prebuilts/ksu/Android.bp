@@ -1,8 +1,0 @@
-android_app_import {
-    name: "ReSukiSU",
-    apk: "ReSukiSU.apk",
-    presigned: true,
-    dex_preopt: {
-        enabled: false,
-    },
-}

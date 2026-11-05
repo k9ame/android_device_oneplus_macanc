@@ -41,10 +41,12 @@ PRODUCT_PACKAGES += \
     libjc_keymint3.nxp \
     libjc_keymint_transport_nxp_override
 
-# KernelSU 管理器（ReSukiSU，兼容 BakaSU/SukiSU 内核侧实现）
-# 内核镜像由 device/oneplus/macanc-kernel 提供（已内置 KSU + SUSFS）
+# KernelSU 管理器（BakaSU 35257，版本与内核驱动 35257 匹配）
+# 内核镜像由 device/oneplus/macanc-kernel 提供（已内置 KSU + SUSFS）。
+# targetSdk 37 + 压缩 JNI 的预签名 APK 无法走 android_app_import 校验，
+# 用 prebuilts/ksu/Android.mk 的 BUILD_PREBUILT（PRESIGNED）保留原始签名。
 PRODUCT_PACKAGES += \
-    ReSukiSU
+    BakaSU
 
 # LiveDisplay
 $(call soong_config_set_bool,OPLUS_LINEAGE_LIVEDISPLAY_HAL,ENABLE_SE,false)
