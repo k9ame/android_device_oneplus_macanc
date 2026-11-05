@@ -48,6 +48,12 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     BakaSU
 
+# 输入法：Xime 3.4.3（Rime 五笔/拼音）
+# 原样拷贝预签名 APK（保留 v2 签名），这样 GitHub/F-Droid 的更新仍可安装。
+# 默认输入法由 frameworks/base SettingsProvider 补丁写入；AOSP LatinIME 保留。
+PRODUCT_PACKAGES += \
+    Xime
+
 # LiveDisplay
 $(call soong_config_set_bool,OPLUS_LINEAGE_LIVEDISPLAY_HAL,ENABLE_SE,false)
 

@@ -126,6 +126,28 @@ fi
 sh dumpsys location 2>/dev/null | grep -qi "gps" && ok "Location/GNSS 服务可用" || warn "GNSS 状态未知"
 sh ps -A 2>/dev/null | grep -qi "gnss" && ok "GNSS 进程在运行" || warn "GNSS 进程未找到"
 
+sec "输入法"
+if sh pm list packages 2>/dev/null | grep -q "com.kingzcheung.xime"; then
+    ok "Xime 已安装（com.kingzcheung.xime）"
+else
+    warn "Xime 未安装（com.kingzcheung.xime）"
+fi
+DEFAULT_IME=$(sh settings get secure default_input_method 2>/dev/null)
+if [ "$DEFAULT_IME" = "com.kingzcheung.xime/.service.XimeInputMethodService" ]; then
+    ok "默认输入法为 Xime"
+else
+    warn "默认输入法不是 Xime（当前: ${DEFAULT_IME:-null}）"
+fi
+ENABLED_IME=$(sh settings get secure enabled_input_methods 2>/dev/null)
+case "$ENABLED_IME" in
+    *com.kingzcheung.xime*) ok "Xime 已在启用列表" ;;
+    *) warn "Xime 不在 enabled_input_methods 中" ;;
+esac
+case "$ENABLED_IME" in
+    *com.android.inputmethod.latin*) ok "AOSP LatinIME 仍保留在启用列表" ;;
+    *) warn "AOSP LatinIME 不在 enabled_input_methods 中" ;;
+esac
+
 sec "安全 / StrongBox（重点）"
 APDU=$(sh logcat -d 2>/dev/null | grep -c "Error in sending C-APDU")
 if [ "${APDU:-0}" -eq 0 ]; then ok "无 C-APDU 通信错误"; else bad "出现 $APDU 次 C-APDU 错误（StrongBox/SE 通信异常）"; fi
@@ -177,7 +199,7 @@ cat <<'EOF'
 4. 相机：前后摄拍照、录像、闪光灯、变焦、人像；第三方相机 App。
 5. 通话：主副卡拨号/接听/免提/听筒/录音；VoLTE。
 6. 移动数据：4G/5G 开关、飞行模式、热点。
-7. Wi-Fi：2.4G/5G/6G、WPA3、热点。
+7. Wi-Fi：2.4G/5G/6G、WPA3、热点；WLAN 页工具栏扫码添加 Wi-Fi（标准 WIFI: 二维码）。
 8. 蓝牙：耳机（A2DP/LE Audio）、传输文件。
 9. NFC：刷卡/读标签（如有条件）。
 10. 定位：室外 GPS 首次定位时间。
@@ -187,5 +209,6 @@ cat <<'EOF'
 14. 传感器：自动亮度、旋转、距离感应（通话贴耳息屏）、指南针。
 15. 待机：息屏 30 分钟耗电、深睡（dumpsys batterystats）。
 16. 稳定性：连续使用 30 分钟 + 重启 3 次，观察是否卡开机动画/重启。
+17. 输入法：默认 Xime；切换 AOSP 键盘再切回；重启后保持；GitHub/F-Droid 更新可正常覆盖安装。
 ====================================================
 EOF

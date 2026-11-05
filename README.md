@@ -18,6 +18,11 @@ ported to **AviumUI 16.2.2** (LineageOS 23.2 / Android 16).
   `ro.com.android.mobiledata=false`, so a clean flash gets the default internet PDN (`ctlte`)
   without manually toggling mobile data. Only affects the initial settings database; existing
   installs keep their user choice.
+- **Xime 3.4.3 input method preinstalled and set as default** (Rime-based Wubi/Pinyin), while
+  keeping AOSP LatinIME available as a fallback. The APK is copied byte-identical so its v2
+  signature is preserved and GitHub/F-Droid updates keep working.
+- **WLAN QR scan**: a camera action in the Wi-Fi page toolbar opens the built-in scanner and adds
+  a network from a standard `WIFI:` QR code (DPP QR codes are supported too).
 - **KernelSU + SUSFS built-in kernel** (separate repo): BakaSU/SukiSU + SUSFS 2.3.0.
 - **BakaSU manager 35257** prebuilt (`prebuilts/ksu/BakaSU.apk`), matching the kernel driver version.
 - `tools/verify.sh`: unified PASS/WARN/FAIL verification script.
@@ -55,6 +60,14 @@ Source and build recipe:
 - The kernel `LOCALVERSION` is intentionally kept identical to the stock COS build so the
   prebuilt `vendor_dlkm` / `system_dlkm` modules keep loading.
 
+## Input method (IME)
+
+- **Xime 3.4.3** (`com.kingzcheung.xime`), arm64-v8a, is preinstalled in `/system/app/Xime`.
+- It is set as the default IME on first boot; AOSP LatinIME remains enabled as a fallback.
+- The APK is copied **byte-identical** (`LOCAL_REPLACE_PREBUILT_APK_INSTALLED`) to preserve its
+  original v2 signature, so updates from GitHub / F-Droid continue to install normally.
+- Source: https://github.com/ximeiorg/Xime (GPL-3.0). See `prebuilts/ime/README.md`.
+
 ## Verification
 
 ```bash
@@ -71,12 +84,15 @@ StrongBox (C-APDU / shared secret), KernelSU/SUSFS, thermal, USB. A manual check
 - `hardware/nxp/keymint`: disable the AOSP KM300 StrongBox module / transport install, use crDroid prebuilts.
 - `packages/apps/Launcher3`: default icon shape `square` + apply custom shape to app-drawer icons.
 - `vendor/lineage`: enable mobile data by default (`ro.com.android.mobiledata=true`).
+- `frameworks/base`: default input method = Xime on first boot; AOSP LatinIME stays enabled as a fallback.
+- `packages/apps/Settings`: add a WLAN toolbar QR-scan action (camera → add Wi-Fi network).
 
 ## Notes / licensing
 
 - `prebuilts/nxp/` contains **proprietary NXP/OnePlus binaries extracted from crDroid**.
   They are included here for reproducibility; redistribution may be subject to NXP/OnePlus terms.
 - `prebuilts/ksu/BakaSU.apk` is GPL-3.0 (BakaSU / KernelSU). Source: https://github.com/Baka-SU/BakaSU
+- `prebuilts/ime/Xime.apk` is GPL-3.0 (Xime). Source: https://github.com/ximeiorg/Xime
 - Device tree: Apache-2.0 (LineageOS style).
 
 ## Credits

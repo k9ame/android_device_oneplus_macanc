@@ -1,0 +1,20 @@
+diff --git a/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java b/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java
+index a3eab5da1..0426ba632 100644
+--- a/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java
++++ b/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java
+@@ -2188,6 +2188,15 @@ class DatabaseHelper extends SQLiteOpenHelper {
+ 
+             loadSecure35Settings(stmt);
+ 
++            // macanc: default IME = Xime, keep AOSP LatinIME enabled as fallback.
++            // These are only applied when the secure settings DB is first created;
++            // a later user choice is preserved.
++            loadSetting(stmt, Settings.Secure.DEFAULT_INPUT_METHOD,
++                    "com.kingzcheung.xime/.service.XimeInputMethodService");
++            loadSetting(stmt, Settings.Secure.ENABLED_INPUT_METHODS,
++                    "com.kingzcheung.xime/.service.XimeInputMethodService"
++                            + ":com.android.inputmethod.latin/.LatinIME");
++
+             loadBooleanSetting(stmt, Settings.Secure.MOUNT_PLAY_NOTIFICATION_SND,
+                     R.bool.def_mount_play_notification_snd);
+ 

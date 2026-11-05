@@ -1,0 +1,49 @@
+diff --git a/src/com/android/settings/network/NetworkProviderSettings.java b/src/com/android/settings/network/NetworkProviderSettings.java
+index 221c3d7..12d3c11 100644
+--- a/src/com/android/settings/network/NetworkProviderSettings.java
++++ b/src/com/android/settings/network/NetworkProviderSettings.java
+@@ -141,6 +141,7 @@ public class NetworkProviderSettings extends RestrictedDashboardFragment
+     static final int MENU_ID_MODIFY = Menu.FIRST + 4;
+     static final int MENU_FIX_CONNECTIVITY = Menu.FIRST + 5;
+     static final int MENU_ID_SHARE = Menu.FIRST + 6;
++    static final int MENU_SCAN_QR_CODE = Menu.FIRST + 7;
+ 
+     @VisibleForTesting
+     static final int ADD_NETWORK_REQUEST = 2;
+@@ -369,6 +370,11 @@ public class NetworkProviderSettings extends RestrictedDashboardFragment
+         mMenuProvider = new MenuProvider() {
+             @Override
+             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
++                MenuItem scanQrCodeItem = menu.add(0, MENU_SCAN_QR_CODE, 0,
++                        R.string.wifi_dpp_scan_qr_code);
++                scanQrCodeItem.setIcon(R.drawable.ic_scan_24dp);
++                scanQrCodeItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
++
+                 MenuItem fixConnectivityItem = menu.add(0, MENU_FIX_CONNECTIVITY, 0,
+                         R.string.fix_connectivity);
+                 fixConnectivityItem.setIcon(R.drawable.ic_repair_24dp);
+@@ -377,6 +383,13 @@ public class NetworkProviderSettings extends RestrictedDashboardFragment
+ 
+             @Override
+             public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
++                if (menuItem.getItemId() == MENU_SCAN_QR_CODE) {
++                    // 调起相机扫描 Wi-Fi 二维码（支持 WIFI: 标准格式和 DPP 格式）
++                    startActivityForResult(
++                            WifiDppUtils.getEnrolleeQrCodeScannerIntent(getContext(), null),
++                            REQUEST_CODE_WIFI_DPP_ENROLLEE_QR_CODE_SCANNER);
++                    return true;
++                }
+                 if (menuItem.getItemId() == MENU_FIX_CONNECTIVITY) {
+                     if (isPhoneOnCall()) {
+                         showResetInternetDialog();
+@@ -396,6 +409,10 @@ public class NetworkProviderSettings extends RestrictedDashboardFragment
+                         && mWifiPickerTracker.getWifiState() == WifiManager.WIFI_STATE_ENABLED;
+                 boolean isAirplaneModeOn =
+                         mAirplaneModeEnabler != null && mAirplaneModeEnabler.isAirplaneModeOn();
++                MenuItem scanQrCodeItem = menu.findItem(MENU_SCAN_QR_CODE);
++                if (scanQrCodeItem != null) {
++                    scanQrCodeItem.setVisible(!mIsGuest && (!isAirplaneModeOn || isWifiEnabled));
++                }
+                 MenuItem fixConnectivityItem = menu.findItem(MENU_FIX_CONNECTIVITY);
+                 if (fixConnectivityItem == null) {
+                     return;
