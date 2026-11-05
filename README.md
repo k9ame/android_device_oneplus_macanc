@@ -14,6 +14,10 @@ ported to **AviumUI 16.2.2** (LineageOS 23.2 / Android 16).
   applied through a device-level `PRODUCT_PACKAGE_OVERLAYS` overlay.
 - **Launcher icon shape**: iOS-like rounded rectangle (`square`) by default, and also applied to the
   app drawer (upstream only applied custom shapes to themed/workspace icons).
+- **Mobile data enabled by default** (crDroid parity): overrides Lineage's
+  `ro.com.android.mobiledata=false`, so a clean flash gets the default internet PDN (`ctlte`)
+  without manually toggling mobile data. Only affects the initial settings database; existing
+  installs keep their user choice.
 - **KernelSU + SUSFS built-in kernel** (separate repo): BakaSU/SukiSU + SUSFS 2.3.0.
 - **BakaSU manager 35257** prebuilt (`prebuilts/ksu/BakaSU.apk`), matching the kernel driver version.
 - `tools/verify.sh`: unified PASS/WARN/FAIL verification script.
@@ -66,6 +70,7 @@ StrongBox (C-APDU / shared secret), KernelSU/SUSFS, thermal, USB. A manual check
 
 - `hardware/nxp/keymint`: disable the AOSP KM300 StrongBox module / transport install, use crDroid prebuilts.
 - `packages/apps/Launcher3`: default icon shape `square` + apply custom shape to app-drawer icons.
+- `vendor/lineage`: enable mobile data by default (`ro.com.android.mobiledata=true`).
 
 ## Notes / licensing
 

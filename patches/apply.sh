@@ -3,8 +3,9 @@
 #  1. hardware/nxp/keymint：停用 AOSP 的 StrongBox 实现，改用 prebuilts/nxp（来自 crDroid）
 #  2. packages/apps/Launcher3：图标默认形状 square（iOS 风格圆角矩形，介于圆形和直角之间），
 #     并让应用抽屉图标也应用自定义形状（原逻辑只对 FLAG_THEMED 图标生效）
+#  3. vendor/lineage：移动数据默认开启（覆盖 Lineage 的 ro.com.android.mobiledata=false）
 set -e
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 
 apply_patch() {
     local repo="$1"
@@ -28,3 +29,7 @@ apply_patch "hardware/nxp/keymint" \
 apply_patch "packages/apps/Launcher3" \
     "$ROOT/device/oneplus/macanc/patches/launcher3_icon_shape.patch" \
     "packages/apps/Launcher3"
+
+apply_patch "vendor/lineage" \
+    "$ROOT/device/oneplus/macanc/patches/lineage_telephony_mobile_data.patch" \
+    "vendor/lineage telephony (mobile data default on)"

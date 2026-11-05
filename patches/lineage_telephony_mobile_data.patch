@@ -1,0 +1,13 @@
+diff --git a/config/telephony.mk b/config/telephony.mk
+index 3e64623..602fb66 100644
+--- a/config/telephony.mk
++++ b/config/telephony.mk
+@@ -27,6 +27,6 @@ endif
+ PRODUCT_PRODUCT_PROPERTIES += \
+     net.tethering.noprovisioning=true
+ 
+-# Disable mobile data by default
++# Enable mobile data by default (macanc: match crDroid behavior)
+ PRODUCT_PRODUCT_PROPERTIES += \
+-    ro.com.android.mobiledata=false
++    ro.com.android.mobiledata=true

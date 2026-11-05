@@ -103,6 +103,26 @@ NFC=$(sh dumpsys nfc 2>/dev/null | head -2)
 sec "通信 / 定位"
 TEL=$(sh dumpsys telephony.registry 2>/dev/null | grep -m1 -iE "mServiceState|mDataConnectionState")
 [ -n "$TEL" ] && ok "Telephony 已注册（$TEL）" || warn "Telephony 状态读取失败（可能无 SIM）"
+
+# 移动数据默认值（仅影响首次创建 settings 数据库；已有数据分区保留用户选择）
+MOBILE_DEFAULT=$(prop ro.com.android.mobiledata)
+if [ "$MOBILE_DEFAULT" = "true" ]; then
+    ok "移动数据默认开启（ro.com.android.mobiledata=true）"
+else
+    warn "移动数据默认关闭（ro.com.android.mobiledata=${MOBILE_DEFAULT:-未设置}）；新刷机后需手动打开"
+fi
+DATA1=$(sh settings get global mobile_data1 2>/dev/null)
+if [ "$DATA1" = "1" ]; then
+    ok "订阅 1 移动数据开关已开启（mobile_data1=1）"
+else
+    warn "订阅 1 移动数据开关未开启（mobile_data1=${DATA1:-null}）"
+fi
+if sh dumpsys connectivity 2>/dev/null | grep -q "extra: ctlte"; then
+    ok "默认互联网 PDN 已建立（ctlte）"
+else
+    warn "未检测到默认互联网 PDN（ctlte）；可能无 SIM、未开数据或仅 IMS PDN"
+fi
+
 sh dumpsys location 2>/dev/null | grep -qi "gps" && ok "Location/GNSS 服务可用" || warn "GNSS 状态未知"
 sh ps -A 2>/dev/null | grep -qi "gnss" && ok "GNSS 进程在运行" || warn "GNSS 进程未找到"
 
