@@ -1,0 +1,25 @@
+diff --git a/src/com/android/launcher3/graphics/ThemeManager.kt b/src/com/android/launcher3/graphics/ThemeManager.kt
+index 6aff7b1..48da7f9 100644
+--- a/src/com/android/launcher3/graphics/ThemeManager.kt
++++ b/src/com/android/launcher3/graphics/ThemeManager.kt
+@@ -213,7 +213,7 @@ constructor(
+     companion object {
+ 
+         @JvmField val INSTANCE = DaggerSingletonObject(LauncherAppComponent::getThemeManager)
+-        @JvmField val PREF_ICON_SHAPE = backedUpItem("icon_shape_model", "")
++        @JvmField val PREF_ICON_SHAPE = backedUpItem("icon_shape_model", "square")
+ 
+         @JvmField val DEFAULT_SHAPE_DELEGATE = pickBestShape(shapeStr = "")
+ 
+diff --git a/src/com/android/launcher3/model/data/ItemInfoWithIcon.java b/src/com/android/launcher3/model/data/ItemInfoWithIcon.java
+index 49fd398..14d313c 100644
+--- a/src/com/android/launcher3/model/data/ItemInfoWithIcon.java
++++ b/src/com/android/launcher3/model/data/ItemInfoWithIcon.java
+@@ -341,7 +341,6 @@ public abstract class ItemInfoWithIcon extends ItemInfo {
+      */
+     public boolean supportsCustomShapes(@DrawableCreationFlags int creationFlags) {
+         return Flags.enableLauncherIconShapes()
+-                && (creationFlags & FLAG_THEMED) != 0
+                 && bitmap.isFullBleed();
+     }
+ 

@@ -1,0 +1,94 @@
+// 移植自 crDroid（与当前固件匹配的 NXP StrongBox 栈）
+// 对应的 AOSP 源码模块已在 hardware/nxp 里停用，由这里提供唯一实现
+
+cc_prebuilt_binary {
+    name: "android.hardware.security.keymint3-service.strongbox.nxp",
+    owner: "oneplus",
+    vendor: true,
+    relative_install_path: "hw",
+    srcs: ["hw/android.hardware.security.keymint3-service.strongbox.nxp"],
+    init_rc: ["android.hardware.security.keymint3-service.strongbox.nxp.rc"],
+    vintf_fragments: [
+        "android.hardware.security.keymint3-service.strongbox.nxp.xml",
+        "android.hardware.security.sharedsecret3-service.strongbox.nxp.xml",
+    ],
+    required: [
+        "android.hardware.hardware_keystore.jc-strongbox-keymint3.nxp.xml",
+    ],
+    // 声明真实依赖，Soong 才会构建并安装这些库的 vendor 变体
+    // （尤其是 keymint-V3-ndk / lib_android_keymaster_keymint_utils_V3，
+    //  它们原本只被 AOSP KM300 源码模块依赖，停用后就不会被安装）
+    shared_libs: [
+        "android.hardware.security.keymint-V3-ndk",
+        "android.hardware.security.rkp-V3-ndk",
+        "android.hardware.security.sharedsecret-V1-ndk",
+        "android.hardware.secure_element-V1-ndk",
+        "android.se.omapi-V1-ndk",
+        "lib_android_keymaster_keymint_utils_V3",
+        "libbase",
+        "libbinder_ndk",
+        "libcppbor",
+        "libcrypto",
+        "libhidlbase",
+        "libkeymaster_portable",
+        "liblog",
+        "libutils",
+        "libjc_keymint3.nxp",
+        "libjc_keymint_transport.nxp",
+    ],
+    strip: {
+        none: true,
+    },
+    check_elf_files: false,
+    prefer: true,
+}
+
+// crDroid 的 OMAPI/ESE 传输实现（与手机内的 javacard SE 匹配）。
+// AOSP 源码版本会报 "Error in sending C-APDU"。
+cc_prebuilt_library_shared {
+    name: "libjc_keymint_transport_nxp_override",
+    owner: "oneplus",
+    vendor: true,
+    stem: "libjc_keymint_transport.nxp",
+    srcs: ["lib64/libjc_keymint_transport.nxp.so"],
+    strip: {
+        none: true,
+    },
+    check_elf_files: false,
+}
+
+cc_prebuilt_library_shared {
+    name: "libjc_keymint3.nxp",
+    owner: "oneplus",
+    vendor: true,
+    srcs: ["lib64/libjc_keymint3.nxp.so"],
+    // prebuilt 不会自动推导依赖，这里列出它 NEEDED 的库，
+    // 否则这些库不会被安装到 /vendor/lib64，服务启动时 linker 会报 not found。
+    shared_libs: [
+        "android.hardware.security.keymint-V3-ndk",
+        "android.hardware.security.rkp-V3-ndk",
+        "android.hardware.security.secureclock-V1-ndk",
+        "android.hardware.security.sharedsecret-V1-ndk",
+        "android.hardware.secure_element-V1-ndk",
+        "lib_android_keymaster_keymint_utils_V3",
+        "libbase",
+        "libbinder",
+        "libbinder_ndk",
+        "libcppbor",
+        "libcrypto",
+        "libcutils",
+        "libkeymaster_messages",
+        "libkeymaster_portable",
+        "liblog",
+        "libmemunreachable",
+        "libsoft_attestation_cert",
+        "libutils",
+        "libjc_keymint_transport.nxp",
+    ],
+    strip: {
+        none: true,
+    },
+    check_elf_files: false,
+    prefer: true,
+}
+

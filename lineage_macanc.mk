@@ -29,3 +29,16 @@ PRODUCT_BUILD_PROP_OVERRIDES += \
     DeviceProduct=PLR110 \
     SystemDevice=OP6117L1 \
     SystemName=PLR110
+
+# AviumUI
+AVIUM_MAINTAINER ?= kingzcheung
+AVIUM_SETTINGS_SOC_MODEL_NAME ?= Snapdragon 8 Elite Gen 5
+AVIUM_SETTINGS_DEVICE_CODENAME ?= macanc
+# 选择是否开启 GMS (Vanilla: false)
+WITH_GMS ?= false
+# 版本号附加时分秒
+AVIUM_VERSION_APPEND_TIME_OF_DAY ?= false
+# 隐藏 bootloader 解锁状态的欺骗 prop
+AVIUM_FORCE_SET_FAKE_PROP ?= false
+# 强制开启模糊
+TARGET_FORCE_ENABLE_BLUR ?= false

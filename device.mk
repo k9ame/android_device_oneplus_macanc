@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# 默认壁纸：AOSP/crDroid 原生壁纸（覆盖 Avium overlay 里的二次元壁纸）
+PRODUCT_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay-wallpaper
+
 # AAPT
 PRODUCT_AAPT_CONFIG := normal
 PRODUCT_AAPT_PREF_CONFIG := xxxhdpi
@@ -22,10 +25,26 @@ TARGET_SCREEN_WIDTH := 1272
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/display/displayconfig.xml:$(TARGET_COPY_OUT_VENDOR)/etc/displayconfig/display_id_4630946700822127507.xml
 
-# Keymint
+# Audio HAL：audiohalservice.qti 使用 prebuilt blob（不含 rc），
+# 必须从源码把 init rc 复制进 vendor，否则 init 不会启动音频 HAL，
+# system_server 的 AudioService 会卡住导致 sys.boot_completed 永远不置位。
+# 用不同文件名安装，避免与 Soong 里同名的 prebuilt/源码模块安装目标冲突。
+PRODUCT_COPY_FILES += \
+    hardware/qcom-caf/sm8850/audio/primary-hal/hal/service/audiohalservice_qti.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/audiohalservice_qti_macanc.rc
+
+# Keymint（StrongBox 使用 prebuilts/nxp 中来自 crDroid 的兼容版本）
+# 注意：prebuilt 库必须显式列在 PRODUCT_PACKAGES 里，否则没人依赖它 Soong 不会安装，
+# StrongBox 服务会因 dlopen 失败而崩溃，导致 keystore2 等待、init_user0 挂死、无法开机。
 PRODUCT_PACKAGES += \
     android.hardware.security.keymint3-service.strongbox.nxp \
-    android.hardware.weaver-service.nxp
+    android.hardware.weaver-service.nxp \
+    libjc_keymint3.nxp \
+    libjc_keymint_transport_nxp_override
+
+# KernelSU 管理器（ReSukiSU，兼容 BakaSU/SukiSU 内核侧实现）
+# 内核镜像由 device/oneplus/macanc-kernel 提供（已内置 KSU + SUSFS）
+PRODUCT_PACKAGES += \
+    ReSukiSU
 
 # LiveDisplay
 $(call soong_config_set_bool,OPLUS_LINEAGE_LIVEDISPLAY_HAL,ENABLE_SE,false)
