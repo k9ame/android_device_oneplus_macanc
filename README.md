@@ -23,6 +23,8 @@ ported to **AviumUI 16.2.2** (LineageOS 23.2 / Android 16).
   signature is preserved and GitHub/F-Droid updates keep working.
 - **WLAN QR scan**: a camera action in the Wi-Fi page toolbar opens the built-in scanner and adds
   a network from a standard `WIFI:` QR code (DPP QR codes are supported too).
+- **Bluetooth RSSI sort**: the "Available devices" list is sorted by signal strength (new devices
+  are inserted by RSSI, refreshes are throttled to 2 s to avoid constant jumping).
 - **KernelSU + SUSFS built-in kernel** (separate repo): BakaSU/SukiSU + SUSFS 2.3.0.
 - **BakaSU manager 35257** prebuilt (`prebuilts/ksu/BakaSU.apk`), matching the kernel driver version.
 - `tools/verify.sh`: unified PASS/WARN/FAIL verification script.
@@ -86,6 +88,7 @@ StrongBox (C-APDU / shared secret), KernelSU/SUSFS, thermal, USB. A manual check
 - `vendor/lineage`: enable mobile data by default (`ro.com.android.mobiledata=true`).
 - `frameworks/base`: default input method = Xime on first boot; AOSP LatinIME stays enabled as a fallback.
 - `packages/apps/Settings`: add a WLAN toolbar QR-scan action (camera → add Wi-Fi network).
+- `packages/apps/Settings`: sort Bluetooth available devices by RSSI, with a 2 s refresh throttle.
 
 ## Notes / licensing
 
