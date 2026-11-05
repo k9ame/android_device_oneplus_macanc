@@ -6,6 +6,8 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := APPS
 LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
 LOCAL_SRC_FILES := BakaSU.apk
+# 绕过 prebuilt 处理（uncompress JNI / zipalign 会破坏 v2 签名），直接原样拷贝
+LOCAL_REPLACE_PREBUILT_APK_INSTALLED := $(LOCAL_PATH)/BakaSU.apk
 # 保留 BakaSU 原始签名（KernelSU 依赖管理器签名）
 LOCAL_CERTIFICATE := PRESIGNED
 LOCAL_DEX_PREOPT := false
