@@ -1,0 +1,371 @@
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index e9005f977..41039e0e3 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -856,6 +856,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     private boolean mLongSwipeDown;
+     private CameraAvailbilityListener mCameraAvailabilityListener;
+     private ScreenshotHelper mScreenshotHelper;
++    private SideKeyController mSideKeyController;
+ 
+     private class PolicyHandler extends Handler {
+ 
+@@ -2653,6 +2654,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+ 
+         mHandler = new PolicyHandler(injector.getLooper());
+         mScreenshotHelper = new ScreenshotHelper(mContext);
++        mSideKeyController = new SideKeyController(mContext, mHandler, mScreenshotHelper);
+         mWakeGestureListener = new MyWakeGestureListener(mContext, mHandler);
+         mSettingsObserver = new SettingsObserver(mHandler);
+         mSettingsObserver.observe();
+@@ -5043,6 +5045,16 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             return 0;
+         }
+ 
++        // OnePlus Plus Key: the stock key layout maps scan code 735 to KEYCODE_ASSIST.
++        // Intercept it before the default assistant handling so it can run the
++        // single/double/long-press actions configured in Settings.
++        if (keyCode == KeyEvent.KEYCODE_ASSIST
++                && event.getScanCode() == SideKeyController.SCAN_CODE_SIDE
++                && mSideKeyController != null
++                && mSideKeyController.handleKeyEvent(event)) {
++            return 0;
++        }
++
+         final boolean interactive = (policyFlags & FLAG_INTERACTIVE) != 0;
+         final boolean canceled = event.isCanceled();
+         final int displayId = event.getDisplayId();
+diff --git a/services/core/java/com/android/server/policy/SideKeyController.java b/services/core/java/com/android/server/policy/SideKeyController.java
+new file mode 100644
+index 000000000..371b6bcc2
+--- /dev/null
++++ b/services/core/java/com/android/server/policy/SideKeyController.java
+@@ -0,0 +1,328 @@
++/*
++ * Copyright (C) 2026 The LineageOS Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.server.policy;
++
++import android.app.NotificationManager;
++import android.content.Context;
++import android.content.Intent;
++import android.hardware.camera2.CameraAccessException;
++import android.hardware.camera2.CameraCharacteristics;
++import android.hardware.camera2.CameraManager;
++import android.media.AudioManager;
++import android.os.Handler;
++import android.os.SystemClock;
++import android.os.UserHandle;
++import android.provider.MediaStore;
++import android.provider.Settings;
++import android.util.Log;
++import android.view.KeyEvent;
++import android.view.WindowManager;
++
++import com.android.internal.util.ScreenshotHelper;
++
++/**
++ * Handles the OnePlus "Plus Key" (the physical shortcut button on the left side).
++ *
++ * <p>The stock key layout maps Linux scan code 735 (BTN_TRIGGER_HAPPY32) to
++ * {@link KeyEvent#KEYCODE_ASSIST}. We intercept that event before it reaches the
++ * default assistant handling and turn it into single/double/long-press actions.
++ */
++public class SideKeyController {
++    private static final String TAG = "SideKeyController";
++
++    /** Linux scan code of the OnePlus Plus Key (oplus-magic-buttom). */
++    public static final int SCAN_CODE_SIDE = 735;
++
++    // Settings.System keys. Keep in sync with Settings' SideKeySettings.
++    public static final String SETTING_ENABLED = "side_key_enabled";
++    public static final String SETTING_SINGLE_ACTION = "side_key_single_action";
++    public static final String SETTING_DOUBLE_ACTION = "side_key_double_action";
++    public static final String SETTING_LONG_ACTION = "side_key_long_action";
++
++    // Action IDs. Keep in sync with Settings' SideKeySettings.
++    public static final int ACTION_NONE = 0;
++    public static final int ACTION_CYCLE_RINGER = 1;
++    public static final int ACTION_TOGGLE_DND = 2;
++    public static final int ACTION_CAMERA = 3;
++    public static final int ACTION_FLASHLIGHT = 4;
++    public static final int ACTION_SCREENSHOT = 5;
++    public static final int ACTION_MEDIA_PLAY_PAUSE = 6;
++    public static final int ACTION_MEDIA_NEXT = 7;
++    public static final int ACTION_MEDIA_PREVIOUS = 8;
++    public static final int ACTION_ASSISTANT = 9;
++
++    private static final long LONG_PRESS_TIMEOUT_MS = 500;
++    private static final long DOUBLE_TAP_TIMEOUT_MS = 300;
++
++    private final Context mContext;
++    private final Handler mHandler;
++    private final ScreenshotHelper mScreenshotHelper;
++    private final AudioManager mAudioManager;
++    private final NotificationManager mNotificationManager;
++    private final CameraManager mCameraManager;
++
++    private boolean mPressed;
++    private boolean mLongTriggered;
++    private boolean mPendingSingle;
++    private boolean mDoubleCandidate;
++    private boolean mFlashlightOn;
++    private String mFlashlightCameraId;
++
++    private final Runnable mLongPressRunnable = () -> {
++        if (!mPressed) {
++            return;
++        }
++        mLongTriggered = true;
++        mPendingSingle = false;
++        mDoubleCandidate = false;
++        execute(getAction(SETTING_LONG_ACTION));
++    };
++
++    private final Runnable mSingleRunnable = () -> {
++        if (!mPendingSingle) {
++            return;
++        }
++        mPendingSingle = false;
++        execute(getAction(SETTING_SINGLE_ACTION));
++    };
++
++    public SideKeyController(Context context, Handler handler,
++            ScreenshotHelper screenshotHelper) {
++        mContext = context;
++        mHandler = handler;
++        mScreenshotHelper = screenshotHelper;
++        mAudioManager = context.getSystemService(AudioManager.class);
++        mNotificationManager = context.getSystemService(NotificationManager.class);
++        mCameraManager = context.getSystemService(CameraManager.class);
++    }
++
++    /**
++     * @return {@code true} if the event was handled and must not be passed to the
++     *         default assistant handling.
++     */
++    public boolean handleKeyEvent(KeyEvent event) {
++        if (event.getKeyCode() != KeyEvent.KEYCODE_ASSIST
++                || event.getScanCode() != SCAN_CODE_SIDE) {
++            return false;
++        }
++        if (!isEnabled()) {
++            return false;
++        }
++
++        switch (event.getAction()) {
++            case KeyEvent.ACTION_DOWN:
++                if (event.getRepeatCount() == 0) {
++                    onDown();
++                }
++                return true;
++            case KeyEvent.ACTION_UP:
++                onUp();
++                return true;
++            default:
++                return true;
++        }
++    }
++
++    private void onDown() {
++        mHandler.removeCallbacks(mSingleRunnable);
++        if (mPendingSingle) {
++            mPendingSingle = false;
++            mDoubleCandidate = true;
++        } else {
++            mDoubleCandidate = false;
++        }
++        mPressed = true;
++        mLongTriggered = false;
++        mHandler.removeCallbacks(mLongPressRunnable);
++        mHandler.postDelayed(mLongPressRunnable, LONG_PRESS_TIMEOUT_MS);
++    }
++
++    private void onUp() {
++        mPressed = false;
++        mHandler.removeCallbacks(mLongPressRunnable);
++
++        if (mLongTriggered) {
++            mLongTriggered = false;
++            mDoubleCandidate = false;
++            return;
++        }
++
++        if (mDoubleCandidate) {
++            mDoubleCandidate = false;
++            execute(getAction(SETTING_DOUBLE_ACTION));
++            return;
++        }
++
++        // With no double-click action configured, a single click can fire immediately.
++        if (getAction(SETTING_DOUBLE_ACTION) == ACTION_NONE) {
++            execute(getAction(SETTING_SINGLE_ACTION));
++        } else {
++            mPendingSingle = true;
++            mHandler.removeCallbacks(mSingleRunnable);
++            mHandler.postDelayed(mSingleRunnable, DOUBLE_TAP_TIMEOUT_MS);
++        }
++    }
++
++    private boolean isEnabled() {
++        return Settings.System.getIntForUser(mContext.getContentResolver(),
++                SETTING_ENABLED, 1, UserHandle.USER_SYSTEM) != 0;
++    }
++
++    private int getAction(String key) {
++        return Settings.System.getIntForUser(mContext.getContentResolver(), key,
++                defaultAction(key), UserHandle.USER_SYSTEM);
++    }
++
++    private static int defaultAction(String key) {
++        if (SETTING_SINGLE_ACTION.equals(key)) {
++            return ACTION_CYCLE_RINGER;
++        }
++        if (SETTING_LONG_ACTION.equals(key)) {
++            return ACTION_SCREENSHOT;
++        }
++        return ACTION_NONE;
++    }
++
++    private void execute(int action) {
++        try {
++            switch (action) {
++                case ACTION_NONE:
++                    break;
++                case ACTION_CYCLE_RINGER:
++                    cycleRinger();
++                    break;
++                case ACTION_TOGGLE_DND:
++                    toggleDnd();
++                    break;
++                case ACTION_CAMERA:
++                    launchCamera();
++                    break;
++                case ACTION_FLASHLIGHT:
++                    toggleFlashlight();
++                    break;
++                case ACTION_SCREENSHOT:
++                    takeScreenshot();
++                    break;
++                case ACTION_MEDIA_PLAY_PAUSE:
++                    sendMediaKey(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
++                    break;
++                case ACTION_MEDIA_NEXT:
++                    sendMediaKey(KeyEvent.KEYCODE_MEDIA_NEXT);
++                    break;
++                case ACTION_MEDIA_PREVIOUS:
++                    sendMediaKey(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
++                    break;
++                case ACTION_ASSISTANT:
++                    launchAssistant();
++                    break;
++                default:
++                    Log.w(TAG, "Unknown side key action " + action);
++                    break;
++            }
++        } catch (Exception e) {
++            Log.w(TAG, "Side key action " + action + " failed", e);
++        }
++    }
++
++    private void cycleRinger() {
++        if (mAudioManager == null) {
++            return;
++        }
++        final int mode = mAudioManager.getRingerMode();
++        final int next;
++        if (mode == AudioManager.RINGER_MODE_NORMAL) {
++            next = AudioManager.RINGER_MODE_VIBRATE;
++        } else if (mode == AudioManager.RINGER_MODE_VIBRATE) {
++            next = AudioManager.RINGER_MODE_SILENT;
++        } else {
++            next = AudioManager.RINGER_MODE_NORMAL;
++        }
++        mAudioManager.setRingerMode(next);
++    }
++
++    private void toggleDnd() {
++        if (mNotificationManager == null) {
++            return;
++        }
++        final int current = mNotificationManager.getCurrentInterruptionFilter();
++        final int next = current == NotificationManager.INTERRUPTION_FILTER_ALL
++                ? NotificationManager.INTERRUPTION_FILTER_PRIORITY
++                : NotificationManager.INTERRUPTION_FILTER_ALL;
++        mNotificationManager.setInterruptionFilter(next);
++    }
++
++    private void launchCamera() {
++        final Intent intent = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA);
++        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++        mContext.startActivity(intent);
++    }
++
++    private void launchAssistant() {
++        final Intent intent = new Intent(Intent.ACTION_ASSIST);
++        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++        mContext.startActivity(intent);
++    }
++
++    private void takeScreenshot() {
++        mScreenshotHelper.takeScreenshot(WindowManager.TAKE_SCREENSHOT_FULLSCREEN,
++                WindowManager.ScreenshotSource.SCREENSHOT_KEY_OTHER, mHandler, null);
++    }
++
++    private void sendMediaKey(int keyCode) {
++        if (mAudioManager == null) {
++            return;
++        }
++        final long now = SystemClock.uptimeMillis();
++        mAudioManager.dispatchMediaKeyEvent(new KeyEvent(now, now,
++                KeyEvent.ACTION_DOWN, keyCode, 0));
++        mAudioManager.dispatchMediaKeyEvent(new KeyEvent(now, now,
++                KeyEvent.ACTION_UP, keyCode, 0));
++    }
++
++    private void toggleFlashlight() {
++        if (mCameraManager == null) {
++            return;
++        }
++        try {
++            if (mFlashlightCameraId == null) {
++                mFlashlightCameraId = findFlashlightCameraId();
++            }
++            if (mFlashlightCameraId == null) {
++                return;
++            }
++            mFlashlightOn = !mFlashlightOn;
++            mCameraManager.setTorchMode(mFlashlightCameraId, mFlashlightOn);
++        } catch (CameraAccessException e) {
++            Log.w(TAG, "Unable to toggle flashlight", e);
++        }
++    }
++
++    private String findFlashlightCameraId() throws CameraAccessException {
++        for (String id : mCameraManager.getCameraIdList()) {
++            final CameraCharacteristics characteristics =
++                    mCameraManager.getCameraCharacteristics(id);
++            final Boolean hasFlash = characteristics.get(
++                    CameraCharacteristics.FLASH_INFO_AVAILABLE);
++            final Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
++            if (Boolean.TRUE.equals(hasFlash) && facing != null
++                    && facing == CameraCharacteristics.LENS_FACING_BACK) {
++                return id;
++            }
++        }
++        return null;
++    }
++}

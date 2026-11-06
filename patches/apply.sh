@@ -9,6 +9,8 @@
 #  5. packages/apps/Settings：WLAN 页面工具栏增加“扫描二维码”入口，
 #     调用已有的 DPP/ZXing Wi-Fi 扫码界面
 #  6. packages/apps/Settings：蓝牙“可用设备”按 RSSI 排序（2 秒节流刷新）
+#  7. frameworks/base + packages/apps/Settings：一加侧键（Plus Key）
+#     单击 / 双击 / 长按动作设置
 set -e
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 
@@ -43,6 +45,10 @@ apply_patch "frameworks/base" \
     "$ROOT/device/oneplus/macanc/patches/settingsprovider_default_ime.patch" \
     "frameworks/base SettingsProvider (default IME = Xime)"
 
+apply_patch "frameworks/base" \
+    "$ROOT/device/oneplus/macanc/patches/frameworks_base_side_key.patch" \
+    "frameworks/base (side key controller)"
+
 apply_patch "packages/apps/Settings" \
     "$ROOT/device/oneplus/macanc/patches/settings_wifi_qr_scan.patch" \
     "packages/apps/Settings (WLAN QR scan menu)"
@@ -50,3 +56,7 @@ apply_patch "packages/apps/Settings" \
 apply_patch "packages/apps/Settings" \
     "$ROOT/device/oneplus/macanc/patches/settings_bluetooth_rssi_sort.patch" \
     "packages/apps/Settings (Bluetooth RSSI sort)"
+
+apply_patch "packages/apps/Settings" \
+    "$ROOT/device/oneplus/macanc/patches/settings_side_key.patch" \
+    "packages/apps/Settings (side key settings)"

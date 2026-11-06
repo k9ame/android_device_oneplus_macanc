@@ -25,6 +25,8 @@ ported to **AviumUI 16.2.2** (LineageOS 23.2 / Android 16).
   a network from a standard `WIFI:` QR code (DPP QR codes are supported too).
 - **Bluetooth RSSI sort**: the "Available devices" list is sorted by signal strength (new devices
   are inserted by RSSI, refreshes are throttled to 2 s to avoid constant jumping).
+- **Side key (Plus Key)**: Settings → System → Side key. Configurable single/double/long-press
+  actions: ringer cycle, Do Not Disturb, camera, flashlight, screenshot, media controls, assistant.
 - **KernelSU + SUSFS built-in kernel** (separate repo): BakaSU/SukiSU + SUSFS 2.3.0.
 - **BakaSU manager 35257** prebuilt (`prebuilts/ksu/BakaSU.apk`), matching the kernel driver version.
 - `tools/verify.sh`: unified PASS/WARN/FAIL verification script.
@@ -89,6 +91,8 @@ StrongBox (C-APDU / shared secret), KernelSU/SUSFS, thermal, USB. A manual check
 - `frameworks/base`: default input method = Xime on first boot; AOSP LatinIME stays enabled as a fallback.
 - `packages/apps/Settings`: add a WLAN toolbar QR-scan action (camera → add Wi-Fi network).
 - `packages/apps/Settings`: sort Bluetooth available devices by RSSI, with a 2 s refresh throttle.
+- `frameworks/base`: side-key controller + `PhoneWindowManager` interception (scan code 735 / `KEYCODE_ASSIST`).
+- `packages/apps/Settings`: side key settings page (single / double / long press).
 
 ## Notes / licensing
 

@@ -1,0 +1,318 @@
+diff --git a/res/values-zh-rCN/strings.xml b/res/values-zh-rCN/strings.xml
+index 10cd2d9..c56e7e3 100644
+--- a/res/values-zh-rCN/strings.xml
++++ b/res/values-zh-rCN/strings.xml
+@@ -6117,4 +6117,23 @@
+     <string name="data_usage_tethering_usage_loading">正在计算\u2026</string>
+     <string name="data_usage_tethering_historical_clients">历史连接设备</string>
+     <string name="data_usage_tethering_no_active_clients">没有活动的共享设备</string>
++
++    <!-- OnePlus Plus Key / side key -->
++    <string name="side_key_title">侧键功能</string>
++    <string name="side_key_summary">设置单击、双击和长按的动作</string>
++    <string name="side_key_enable_title">启用侧键功能</string>
++    <string name="side_key_enable_summary">关闭后侧键保持系统默认行为</string>
++    <string name="side_key_single_title">单击</string>
++    <string name="side_key_double_title">双击</string>
++    <string name="side_key_long_title">长按</string>
++    <string name="side_key_action_none">无操作</string>
++    <string name="side_key_action_cycle_ringer">响铃 / 振动 / 静音循环</string>
++    <string name="side_key_action_toggle_dnd">免打扰开关</string>
++    <string name="side_key_action_camera">打开相机</string>
++    <string name="side_key_action_flashlight">手电筒开关</string>
++    <string name="side_key_action_screenshot">截屏</string>
++    <string name="side_key_action_media_play_pause">播放 / 暂停</string>
++    <string name="side_key_action_media_next">下一首</string>
++    <string name="side_key_action_media_previous">上一首</string>
++    <string name="side_key_action_assistant">打开语音助手</string>
+ </resources>
+diff --git a/res/values/arrays.xml b/res/values/arrays.xml
+index 760adae..3297d3f 100644
+--- a/res/values/arrays.xml
++++ b/res/values/arrays.xml
+@@ -1733,4 +1733,31 @@
+         <item>Quick settings</item>
+         <item>Lockscreen</item>
+     </string-array>
++
++    <!-- Side key actions -->
++    <string-array name="side_key_action_entries">
++        <item>@string/side_key_action_none</item>
++        <item>@string/side_key_action_cycle_ringer</item>
++        <item>@string/side_key_action_toggle_dnd</item>
++        <item>@string/side_key_action_camera</item>
++        <item>@string/side_key_action_flashlight</item>
++        <item>@string/side_key_action_screenshot</item>
++        <item>@string/side_key_action_media_play_pause</item>
++        <item>@string/side_key_action_media_next</item>
++        <item>@string/side_key_action_media_previous</item>
++        <item>@string/side_key_action_assistant</item>
++    </string-array>
++
++    <string-array name="side_key_action_values" translatable="false">
++        <item>0</item>
++        <item>1</item>
++        <item>2</item>
++        <item>3</item>
++        <item>4</item>
++        <item>5</item>
++        <item>6</item>
++        <item>7</item>
++        <item>8</item>
++        <item>9</item>
++    </string-array>
+ </resources>
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 7c19b76..b43986b 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -15190,4 +15190,24 @@
+     <string name="safety_center_device_finder_search_terms"></string>
+     <!-- Safety Center system component update search terms [CHAR LIMIT=NONE] -->
+     <string name="safety_center_system_component_update_search_terms"></string>
++
++    <!-- OnePlus Plus Key / side key -->
++    <string name="side_key_title">Side key</string>
++    <string name="side_key_summary">Configure single, double and long press actions</string>
++    <string name="side_key_enable_title">Enable side key actions</string>
++    <string name="side_key_enable_summary">When off, the side key keeps its default behavior</string>
++    <string name="side_key_single_title">Single press</string>
++    <string name="side_key_double_title">Double press</string>
++    <string name="side_key_long_title">Long press</string>
++    <string name="side_key_action_none">No action</string>
++    <string name="side_key_action_cycle_ringer">Cycle ring / vibrate / silent</string>
++    <string name="side_key_action_toggle_dnd">Toggle Do Not Disturb</string>
++    <string name="side_key_action_camera">Open camera</string>
++    <string name="side_key_action_flashlight">Toggle flashlight</string>
++    <string name="side_key_action_screenshot">Take screenshot</string>
++    <string name="side_key_action_media_play_pause">Play / pause</string>
++    <string name="side_key_action_media_next">Next track</string>
++    <string name="side_key_action_media_previous">Previous track</string>
++    <string name="side_key_action_assistant">Open assistant</string>
++    <string name="keywords_side_key">side key plus key shortcut button 侧键 快捷键</string>
+ </resources>
+diff --git a/res/xml/side_key_settings.xml b/res/xml/side_key_settings.xml
+new file mode 100644
+index 0000000..72d07a4
+--- /dev/null
++++ b/res/xml/side_key_settings.xml
+@@ -0,0 +1,51 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Copyright (C) 2026 The LineageOS Project
++
++     Licensed under the Apache License, Version 2.0 (the "License");
++     you may not use this file except in compliance with the License.
++     You may obtain a copy of the License at
++
++          http://www.apache.org/licenses/LICENSE-2.0
++
++     Unless required by applicable law or agreed to in writing, software
++     distributed under the License is distributed on an "AS IS" BASIS,
++     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++     See the License for the specific language governing permissions and
++     limitations under the License.
++-->
++<PreferenceScreen
++    xmlns:android="http://schemas.android.com/apk/res/android"
++    android:title="@string/side_key_title">
++
++    <SwitchPreferenceCompat
++        android:key="side_key_enabled"
++        android:title="@string/side_key_enable_title"
++        android:summary="@string/side_key_enable_summary"
++        android:persistent="false"
++        android:defaultValue="true" />
++
++    <ListPreference
++        android:key="side_key_single_action"
++        android:title="@string/side_key_single_title"
++        android:summary="%s"
++        android:persistent="false"
++        android:entries="@array/side_key_action_entries"
++        android:entryValues="@array/side_key_action_values" />
++
++    <ListPreference
++        android:key="side_key_double_action"
++        android:title="@string/side_key_double_title"
++        android:summary="%s"
++        android:persistent="false"
++        android:entries="@array/side_key_action_entries"
++        android:entryValues="@array/side_key_action_values" />
++
++    <ListPreference
++        android:key="side_key_long_action"
++        android:title="@string/side_key_long_title"
++        android:summary="%s"
++        android:persistent="false"
++        android:entries="@array/side_key_action_entries"
++        android:entryValues="@array/side_key_action_values" />
++
++</PreferenceScreen>
+diff --git a/res/xml/system_dashboard_fragment.xml b/res/xml/system_dashboard_fragment.xml
+index 2bef028..4f60c3b 100644
+--- a/res/xml/system_dashboard_fragment.xml
++++ b/res/xml/system_dashboard_fragment.xml
+@@ -83,6 +83,16 @@
+         android:fragment="com.android.settings.gestures.GestureSettings"
+         settings:controller="com.android.settings.gestures.GesturesSettingPreferenceController"/>
+ 
++    <Preference
++        android:key="side_key_settings"
++        android:title="@string/side_key_title"
++        android:summary="@string/side_key_summary"
++        android:icon="@drawable/ic_settings_gestures"
++        android:order="-249"
++        android:fragment="com.android.settings.sidekey.SideKeySettings"
++        settings:controller="com.android.settings.sidekey.SideKeyPreferenceController"
++        settings:keywords="@string/keywords_side_key"/>
++
+     <Preference
+         android:key="date_time_settings"
+         android:title="@string/date_and_time"
+diff --git a/src/com/android/settings/sidekey/SideKeyPreferenceController.java b/src/com/android/settings/sidekey/SideKeyPreferenceController.java
+new file mode 100644
+index 0000000..a7f6206
+--- /dev/null
++++ b/src/com/android/settings/sidekey/SideKeyPreferenceController.java
+@@ -0,0 +1,34 @@
++/*
++ * Copyright (C) 2026 The LineageOS Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.settings.sidekey;
++
++import android.content.Context;
++
++import com.android.settings.core.BasePreferenceController;
++
++/** Availability controller for the side-key settings entry. */
++public class SideKeyPreferenceController extends BasePreferenceController {
++
++    public SideKeyPreferenceController(Context context, String preferenceKey) {
++        super(context, preferenceKey);
++    }
++
++    @Override
++    public int getAvailabilityStatus() {
++        return AVAILABLE;
++    }
++}
+diff --git a/src/com/android/settings/sidekey/SideKeySettings.java b/src/com/android/settings/sidekey/SideKeySettings.java
+new file mode 100644
+index 0000000..4bf63ef
+--- /dev/null
++++ b/src/com/android/settings/sidekey/SideKeySettings.java
+@@ -0,0 +1,101 @@
++/*
++ * Copyright (C) 2026 The LineageOS Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.settings.sidekey;
++
++import android.app.settings.SettingsEnums;
++import android.os.Bundle;
++import android.provider.Settings;
++
++import androidx.preference.ListPreference;
++import androidx.preference.Preference;
++import androidx.preference.SwitchPreferenceCompat;
++
++import com.android.settings.R;
++import com.android.settings.SettingsPreferenceFragment;
++
++/**
++ * Settings page for the OnePlus Plus Key (side key).
++ *
++ * <p>Stores the selected actions in Settings.System; the framework's
++ * SideKeyController reads the same keys and performs the action.
++ */
++public class SideKeySettings extends SettingsPreferenceFragment
++        implements Preference.OnPreferenceChangeListener {
++
++    // Keep in sync with frameworks/base SideKeyController.
++    private static final String KEY_ENABLED = "side_key_enabled";
++    private static final String KEY_SINGLE = "side_key_single_action";
++    private static final String KEY_DOUBLE = "side_key_double_action";
++    private static final String KEY_LONG = "side_key_long_action";
++
++    private static final int ACTION_NONE = 0;
++    private static final int ACTION_CYCLE_RINGER = 1;
++    private static final int ACTION_SCREENSHOT = 5;
++
++    private SwitchPreferenceCompat mEnabled;
++    private ListPreference mSingle;
++    private ListPreference mDouble;
++    private ListPreference mLong;
++
++    @Override
++    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
++        addPreferencesFromResource(R.xml.side_key_settings);
++
++        mEnabled = findPreference(KEY_ENABLED);
++        mSingle = findPreference(KEY_SINGLE);
++        mDouble = findPreference(KEY_DOUBLE);
++        mLong = findPreference(KEY_LONG);
++
++        mEnabled.setChecked(Settings.System.getInt(getContentResolver(), KEY_ENABLED, 1) != 0);
++        mEnabled.setOnPreferenceChangeListener(this);
++
++        mSingle.setValue(String.valueOf(getAction(KEY_SINGLE, ACTION_CYCLE_RINGER)));
++        mDouble.setValue(String.valueOf(getAction(KEY_DOUBLE, ACTION_NONE)));
++        mLong.setValue(String.valueOf(getAction(KEY_LONG, ACTION_SCREENSHOT)));
++
++        mSingle.setOnPreferenceChangeListener(this);
++        mDouble.setOnPreferenceChangeListener(this);
++        mLong.setOnPreferenceChangeListener(this);
++    }
++
++    @Override
++    public boolean onPreferenceChange(Preference preference, Object newValue) {
++        final String key = preference.getKey();
++        if (KEY_ENABLED.equals(key)) {
++            Settings.System.putInt(getContentResolver(), KEY_ENABLED,
++                    (Boolean) newValue ? 1 : 0);
++            return true;
++        }
++
++        try {
++            Settings.System.putInt(getContentResolver(), key,
++                    Integer.parseInt((String) newValue));
++            return true;
++        } catch (NumberFormatException e) {
++            return false;
++        }
++    }
++
++    private int getAction(String key, int defaultValue) {
++        return Settings.System.getInt(getContentResolver(), key, defaultValue);
++    }
++
++    @Override
++    public int getMetricsCategory() {
++        return SettingsEnums.SETTINGS_SYSTEM_CATEGORY;
++    }
++}
