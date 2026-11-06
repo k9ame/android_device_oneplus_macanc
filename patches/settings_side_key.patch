@@ -316,3 +316,42 @@ index 0000000..4bf63ef
 +        return SettingsEnums.SETTINGS_SYSTEM_CATEGORY;
 +    }
 +}
+diff --git a/src/com/android/settings/system/SystemDashboardFragment.java b/src/com/android/settings/system/SystemDashboardFragment.java
+index 1d574b4..5b55a5f 100644
+--- a/src/com/android/settings/system/SystemDashboardFragment.java
++++ b/src/com/android/settings/system/SystemDashboardFragment.java
+@@ -28,6 +28,7 @@ import androidx.preference.PreferenceScreen;
+ import com.android.settings.R;
+ import com.android.settings.dashboard.DashboardFragment;
+ import com.android.settings.search.BaseSearchIndexProvider;
++import com.android.settings.sidekey.SideKeySettings;
+ import com.android.settingslib.search.SearchIndexable;
+ 
+ // LINT.IfChange
+@@ -47,6 +48,26 @@ public class SystemDashboardFragment extends DashboardFragment {
+         }
+     }
+ 
++    @Override
++    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
++        super.onCreatePreferences(savedInstanceState, rootKey);
++
++        // Avium's resource overlay can replace system_dashboard_fragment.xml, so also add the
++        // side-key entry programmatically to make sure it is always present.
++        final PreferenceScreen screen = getPreferenceScreen();
++        if (screen == null || screen.findPreference("side_key_settings") != null) {
++            return;
++        }
++        final Preference sideKey = new Preference(getContext());
++        sideKey.setKey("side_key_settings");
++        sideKey.setTitle(R.string.side_key_title);
++        sideKey.setSummary(R.string.side_key_summary);
++        sideKey.setIcon(R.drawable.ic_settings_gestures);
++        sideKey.setOrder(-249);
++        sideKey.setFragment(SideKeySettings.class.getName());
++        screen.addPreference(sideKey);
++    }
++
+     @Override
+     public int getMetricsCategory() {
+         return SettingsEnums.SETTINGS_SYSTEM_CATEGORY;
