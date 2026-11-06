@@ -181,6 +181,20 @@ THERM=$(sh dumpsys thermalservice 2>/dev/null | grep -m1 -iE "Thermal Status|mSt
 [ -n "$THERM" ] && ok "Thermal 服务可用（$THERM）" || warn "Thermal 状态读取失败"
 sh dumpsys power 2>/dev/null | grep -qi "mWakefulness=Awake" && ok "PowerManager: 屏幕唤醒" || warn "设备可能处于休眠"
 
+sec "双击唤醒"
+DT2W=$(sh settings get secure double_tap_to_wake 2>/dev/null)
+[ "$DT2W" = "1" ] && ok "双击唤醒设置已开启（double_tap_to_wake=1）" \
+    || warn "双击唤醒设置未开启（double_tap_to_wake=${DT2W:-null}）"
+sh dumpsys power 2>/dev/null | grep -q "mDoubleTapWakeEnabled=true" \
+    && ok "PowerManager 已启用双击唤醒" \
+    || warn "PowerManager 未启用双击唤醒"
+KL=$(sh dumpsys input 2>/dev/null | grep -A12 "touchpanel" | grep -m1 "KeyLayoutFile" | sed 's/.*KeyLayoutFile: //')
+case "$KL" in
+    */touchpanel.kl) ok "touchpanel 使用专用 keylayout（$KL）" ;;
+    "") warn "未找到 touchpanel 输入设备" ;;
+    *) bad "touchpanel 仍在使用 $KL（应使用 touchpanel.kl）" ;;
+esac
+
 sec "USB / 充电"
 USB=$(prop sys.usb.state)
 [ -z "$USB" ] && USB="$(prop sys.usb.config) (config)"
