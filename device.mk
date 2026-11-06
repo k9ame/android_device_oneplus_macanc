@@ -75,6 +75,12 @@ PRODUCT_SOONG_NAMESPACES += \
 # Touch features
 $(call soong_config_set_bool,OPLUS_LINEAGE_TOUCH_HAL,ENABLE_GM,true)
 
+# Double-tap to wake
+# 触控 IC 把手势上报为键码 62（KEY_F4），Generic.kl 将其映射为 F4，系统不会点亮屏幕。
+# 为 touchpanel 设备单独安装 keylayout，把 62 映射为 WAKEUP，双击即可从黑屏/息屏唤醒。
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/keylayout/touchpanel.kl:$(TARGET_COPY_OUT_VENDOR)/usr/keylayout/touchpanel.kl
+
 # Vibrator
 PRODUCT_PACKAGES += \
     android.hardware.vibrator.service.oplus-richtap

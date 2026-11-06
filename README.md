@@ -27,6 +27,9 @@ ported to **AviumUI 16.2.2** (LineageOS 23.2 / Android 16).
   are inserted by RSSI, refreshes are throttled to 2 s to avoid constant jumping).
 - **Side key (Plus Key)**: Settings → System → Side key. Configurable single/double/long-press
   actions: ringer cycle, Do Not Disturb, camera, flashlight, screenshot, media controls, assistant.
+- **Double-tap to wake**: works from screen-off/AOD. The touch controller reports the gesture as
+  key code 62 (`KEY_F4`); `keylayout/touchpanel.kl` maps it to `WAKEUP` so the framework wakes the
+  device instead of ignoring it. Toggle: Settings → Display → Tap to wake.
 - **KernelSU + SUSFS built-in kernel** (separate repo): BakaSU/SukiSU + SUSFS 2.3.0.
 - **BakaSU manager 35257** prebuilt (`prebuilts/ksu/BakaSU.apk`), matching the kernel driver version.
 - `tools/verify.sh`: unified PASS/WARN/FAIL verification script.
@@ -93,6 +96,9 @@ StrongBox (C-APDU / shared secret), KernelSU/SUSFS, thermal, USB. A manual check
 - `packages/apps/Settings`: sort Bluetooth available devices by RSSI, with a 2 s refresh throttle.
 - `frameworks/base`: side-key controller + `PhoneWindowManager` interception (scan code 735 / `KEYCODE_ASSIST`).
 - `packages/apps/Settings`: side key settings page (single / double / long press).
+
+`keylayout/touchpanel.kl` is part of this device tree (installed to
+`/vendor/usr/keylayout/touchpanel.kl` by `device.mk`); it needs no patch step.
 
 ## Notes / licensing
 
